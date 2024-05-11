@@ -3,7 +3,7 @@ import random
 from uuid import uuid4
 
 from utils.main import get_token_expires, check_email, check_token_expires, send_email, check_username
-from schemas.users import User, CheckEmail, Creds, RegisterUser, UserProfile, Token, LoginUser, ChangeUserUsername, CheckCode, ChangeUserEmail, ChangeUserPassword, ChangeUserPhoto, ChangeUserRole, TokenAuth, LoginUserProfile, SetNewPassword
+from schemas.users import User, CheckEmail, Creds, RegisterUser, UserProfile, Token, LoginUser, ChangeUserUsername, CheckCode, ChangeUserEmail, ChangeUserPassword, ChangeUserPhoto, TokenAuth, LoginUserProfile, SetNewPassword
 from db.users import find_user, add_user, change_user, filter_users_by_substr
 
 class UsersService:
@@ -180,29 +180,6 @@ class UsersService:
         change_user(user)
         return user.id
     raise HTTPException(status_code=404, detail="Пользователь не найден")
-
-  # change_role
-  def change_role(self, data: ChangeUserRole) -> str:
-    admin_user: User = self._token_auth(TokenAuth( token=data.admin.token))
-    if admin_user:
-      if self._check_admin(admin_user) == False:
-        raise HTTPException(status_code=403, detail="Вы не можете выполнить это действие")
-
-      changed_user = find_user(data.id)
-      if changed_user != None:
-        changed_user.role = data.role
-        change_user(changed_user)
-        return changed_user.id
-    raise HTTPException(status_code=404, detail="Пользователь не найден")
-
-  # _convert_to_user_profile_data
-  def _convert_to_user_profile_data(self, user: User) -> UserProfile:
-    return UserProfile(
-      id=user.id,
-      username=user.username,
-      email=user.auth.email,
-      photo=user.photo
-    )
   
   # _auth
   def _auth(self, data: Creds) -> User:

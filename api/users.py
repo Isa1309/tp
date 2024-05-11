@@ -1,6 +1,6 @@
 from fastapi import APIRouter
 
-from schemas.users import UserProfile, CheckEmail, RegisterUser, LoginUser, ChangeUserUsername, ChangeUserEmail, ChangeUserPassword, ChangeUserPhoto, ChangeUserRole, TokenAuth, SetNewPassword, CheckCode, LoginUserProfile
+from schemas.users import UserProfile, CheckEmail, RegisterUser, LoginUser, ChangeUserUsername, ChangeUserEmail, ChangeUserPassword, ChangeUserPhoto, TokenAuth, SetNewPassword, CheckCode, LoginUserProfile
 from services.users import users_service
 
 router = APIRouter()
@@ -115,12 +115,3 @@ def change_photo(data: ChangeUserPhoto):
 )
 def change_password(data: ChangeUserPassword):
   return users_service.change_password(data)
-
-# change_role
-@router.patch(
-  "/api/users/change/role",
-  status_code=200,
-  response_model=str
-)
-def change_role(data: ChangeUserRole):
-  return users_service.change_role(data)

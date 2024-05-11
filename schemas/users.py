@@ -132,8 +132,3 @@ class ChangeUserPassword(BaseModel):
 class ChangeUserPhoto(BaseModel):
   photo: str
   user: TokenAuth
-
-class ChangeUserRole(BaseModel):
-  id: str
-  role: str
-  admin: TokenAuth
