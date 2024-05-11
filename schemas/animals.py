@@ -1,4 +1,5 @@
 from pydantic import BaseModel
+from schemas.users import TokenAuth
 
 class Animal(BaseModel):
   id: str
@@ -11,7 +12,9 @@ class Breed(BaseModel):
 
 class CreateAnimal(BaseModel):
   name: str
+  admin: TokenAuth
 
 class CreateBreed(BaseModel):
   name: str
   animal_id: str
+  admin: TokenAuth

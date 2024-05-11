@@ -2,6 +2,7 @@ from fastapi import HTTPException
 from schemas.animals import Animal, CreateAnimal, Breed, CreateBreed
 from db.animals import get_animals, add_animal, find_animal
 from db.breeds import get_breeds, add_breed
+from db.users import find_user
 from uuid import uuid4
 
 class AnimalsService:
@@ -10,6 +11,14 @@ class AnimalsService:
     return animals
 
   def add_animal(self, data: CreateAnimal):
+    user = find_user(data.admin.token)
+
+    if user == None:
+      raise HTTPException(status_code=404, detail="Пользователь не найден")
+    
+    if user.role != "admin":
+      raise HTTPException(status_code=403, detail="Отказано в доступе")
+
     new_animal: Animal = Animal(
       id=str(uuid4()),
       name=data.name,
@@ -23,6 +32,14 @@ class AnimalsService:
     return breeds
   
   def add_breed(self, data: CreateBreed):
+    user = find_user(data.admin.token)
+
+    if user == None:
+      raise HTTPException(status_code=404, detail="Пользователь не найден")
+    
+    if user.role != "admin":
+      raise HTTPException(status_code=403, detail="Отказано в доступе")
+    
     animal = find_animal(data.animal_id)
     
     if animal == None: raise HTTPException(status_code=404, detail="Животное с переданным id не найдено")
