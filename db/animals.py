@@ -21,33 +21,33 @@ Base.metadata.create_all(bind=engine)
 
 session = sessionmaker(bind=engine)()
 
-def convert_to_user(user: TableAnimal) -> Animal:
+def convert_to_animal(animal: TableAnimal) -> Animal:
   return Animal(
-    id=user.id,
-    name=user.name,
+    id=animal.id,
+    name=animal.name,
   )
 
-def convert_to_table_user(user: Animal) -> TableAnimal:
+def convert_to_table_animal(animal: Animal) -> TableAnimal:
   return TableAnimal(
-    id=user.id,
-    name=user.name,
+    id=animal.id,
+    name=animal.name,
   )
 
 def get_animals() -> list[Animal]:
   query = session.query(TableAnimal).all()
-  users = []
-  for user in query:
-    if user != None: users.append(convert_to_user(user))
-  return users
+  animals = []
+  for animal in query:
+    if animal != None: animals.append(convert_to_animal(animal))
+  return animals
 
 def find_animal(id: str) -> Animal:
   query = session.query(TableAnimal).filter(or_(TableAnimal.id == id)).first()
   if query == None: return None
-  user = convert_to_user(query)
+  animal = convert_to_animal(query)
   
-  return user
+  return animal
 
-def add_animal(user: Animal) -> Animal:
-  session.add(convert_to_table_user(user))
+def add_animal(animal: Animal) -> Animal:
+  session.add(convert_to_table_animal(animal))
   session.commit()
-  return user
+  return animal
