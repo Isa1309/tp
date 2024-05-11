@@ -11,3 +11,7 @@ class Breed(BaseModel):
 
 class CreateAnimal(BaseModel):
   name: str
+
+class CreateBreed(BaseModel):
+  name: str
+  animal_id: str
