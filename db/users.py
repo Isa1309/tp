@@ -72,13 +72,6 @@ def get_users() -> list[User]:
     if user != None: users.append(convert_to_user(user))
   return users
 
-def filter_users_by_substr(substr: str) -> list[User]:
-  query = session.query(TableUser).filter(or_(TableUser.email.ilike("%"+substr+"%"), TableUser.username.ilike("%"+substr+"%")))
-  users = []
-  for user in query:
-    if user != None: users.append(convert_to_user(user))
-  return users
-
 def find_user(data: str) -> User:
   query = session.query(TableUser).filter(or_(TableUser.id == data, TableUser.email == data, TableUser.token == data)).first()
   if query == None: return None
