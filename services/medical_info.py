@@ -33,6 +33,10 @@ class MedicalInfoService:
     if pet == None: raise HTTPException(status_code=404, detail="Питомец не найден")
     if pet.owner_id != user.id: raise HTTPException(status_code=403, detail="Отказано в доступе")
 
+    card = find_medical_card_by_pet_id(pet.id)
+
+    if card != None: raise HTTPException(status_code=400, detail="Медицинская карта для питомца уже создана")
+
     card_id = str(uuid4())
     vaccination: list[Vaccination] = []
     medical_info: list[MedicalInfo] = []
