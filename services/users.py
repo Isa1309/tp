@@ -4,25 +4,9 @@ from uuid import uuid4
 
 from utils.main import get_token_expires, check_email, check_token_expires, send_email, check_username
 from schemas.users import User, CheckEmail, Creds, RegisterUser, UserProfile, Token, LoginUser, ChangeUserUsername, CheckCode, ChangeUserEmail, ChangeUserPassword, ChangeUserPhoto, TokenAuth, LoginUserProfile, SetNewPassword
-from db.users import find_user, add_user, change_user, filter_users_by_substr
+from db.users import find_user, add_user, change_user
 
 class UsersService:
-  # get_user
-  def get_user(self, data: str) -> UserProfile:
-    user: User = find_user(data)
-
-    if user != None:
-      return self._convert_to_user_profile_data(user)
-    
-    raise HTTPException(status_code=404, detail="Пользователь не найден")
-
-  # filter_users_by_substr
-  def filter_users_by_substr(self, substr: str) -> list[UserProfile]:
-    if substr == "": return []
-    users: list[User] = filter_users_by_substr(substr)
-    mapped_users = list(map(lambda item: self._convert_to_user_profile_data(item), users))
-    return mapped_users
-
   # register_user
   def register_user(self, data: RegisterUser) -> LoginUserProfile:
     if data.auth.password != data.check_password:
@@ -31,32 +15,32 @@ class UsersService:
     user: User = find_user(data.auth.email)
     if user != None:
       raise HTTPException(status_code=406, detail="Пользователь с таким Email уже зарегистрирован")
-    
-    new_user: User = User(
-      id=str(uuid4()),
-      token=Token(
-        token="token_" + str(uuid4()),
-        expires=get_token_expires()
-      ),
-      auth=Creds(
-        email=data.auth.email,
-        password=data.auth.password
-      ),
-      username="",
-      photo="",
-      role="user",
-      code=""
-    )
-    
-    add_user(new_user)
-    return LoginUserProfile(
-        id=new_user.id,
-        username=new_user.username,
-        email=new_user.auth.email,
-        photo=new_user.photo,
-        token=new_user.token.token,
-        role=new_user.role,
+    else:
+      new_user: User = User(
+        id=str(uuid4()),
+        token=Token(
+          token="token_" + str(uuid4()),
+          expires=get_token_expires()
+        ),
+        auth=Creds(
+          email=data.auth.email,
+          password=data.auth.password
+        ),
+        username="",
+        photo="",
+        role="user",
+        code=""
       )
+      
+      add_user(new_user)
+      return LoginUserProfile(
+          id=new_user.id,
+          username=new_user.username,
+          email=new_user.auth.email,
+          photo=new_user.photo,
+          token=new_user.token.token,
+          role=new_user.role,
+        )
 
   # login_user
   def login_user(self, data: LoginUser) -> LoginUserProfile:
@@ -107,7 +91,8 @@ class UsersService:
       user.code = code
       change_user(user)
       return user.auth.email
-    raise HTTPException(status_code=404, detail="Пользователь не найден")
+    else:
+      raise HTTPException(status_code=404, detail="Пользователь не найден")
 
   # user_password_recovery_get_code
   def user_password_recovery_get_code(self, data: CheckCode) -> CheckCode:
@@ -119,7 +104,9 @@ class UsersService:
   # user_password_recovery_change_password
   def user_password_recovery_change_password(self, data: SetNewPassword) -> bool:
     user: User = find_user(data.email)
-    if user != None and user.code == data.code:
+    if user != None:
+      if user.code != data.code:
+        raise HTTPException(status_code=400, detail="Неверный код")
       if data.new_password.new_password != data.new_password.check_new_password:
         raise HTTPException(status_code=400, detail="Пароли не совпадают")
       user.code = ""
@@ -128,16 +115,17 @@ class UsersService:
       user.token.expires = 0
       change_user(user)
       return user.id
-    raise HTTPException(status_code=404, detail="Пользователь не найден")
+    else:
+      raise HTTPException(status_code=400, detail="Пользователь не найден")
 
   # change_username
   def change_username(self, data: ChangeUserUsername) -> str:
     user: User = self._token_auth(TokenAuth(token=data.user.token))
-    if user:
-      user.username = data.username
-      change_user(user)
-      return user.id
-    raise HTTPException(status_code=404, detail="Пользователь не найден")
+    if not check_username(data.username):
+      raise HTTPException(status_code=400, detail="Имя пользователя имеет недопустимые символы")
+    user.username = data.username
+    change_user(user)
+    return user.id
 
   # change_email
   def change_email(self, data: ChangeUserEmail) -> str:
@@ -147,39 +135,34 @@ class UsersService:
       raise HTTPException(status_code=404, detail="Пользователь с таким Email уже существует")
     if check_user != None and check_user.id == user.id:
       return user.id
-    if user:
-      send_email(
-        email=user.auth.email,
-        message_title="Изменение электронной почты",
-        message="Ваша почта была изменена. Новая почта: " + data.email
-      )
-      user.auth.email = data.email
-      change_user(user)
-      return user.id
-    raise HTTPException(status_code=404, detail="Пользователь не найден")
+
+    send_email(
+      email=user.auth.email,
+      message_title="Изменение электронной почты",
+      message="Ваша почта была изменена. Новая почта: " + data.email
+    )
+    user.auth.email = data.email
+    change_user(user)
+    return user.id
 
   # change_photo
   def change_photo(self, data: ChangeUserPhoto) -> str:
     user: User = self._token_auth(TokenAuth(token=data.user.token))
-    if user:
-      user.photo = data.photo
-      change_user(user)
-      return user.id
-    raise HTTPException(status_code=404, detail="Пользователь не найден")
+    user.photo = data.photo
+    change_user(user)
+    return user.id
 
   # change_password
   def change_password(self, data: ChangeUserPassword) -> str:
     user: User = self._token_auth(TokenAuth(token=data.user.token))
-    if user:
-      if user.auth.password != data.old_password:
-        raise HTTPException(status_code=400, detail="Неверный пароль")
-      elif data.new_password.new_password != data.new_password.check_new_password:
-        raise HTTPException(status_code=400, detail="Пароли не совпадают")
-      else:
-        user.auth.password = data.new_password.new_password
-        change_user(user)
-        return user.id
-    raise HTTPException(status_code=404, detail="Пользователь не найден")
+    if user.auth.password != data.old_password:
+      raise HTTPException(status_code=400, detail="Неверный пароль")
+    elif data.new_password.new_password != data.new_password.check_new_password:
+      raise HTTPException(status_code=400, detail="Пароли не совпадают")
+    else:
+      user.auth.password = data.new_password.new_password
+      change_user(user)
+      return user.id
   
   # _auth
   def _auth(self, data: Creds) -> User:
@@ -193,7 +176,7 @@ class UsersService:
     user: User = find_user(data.token)
     if user != None and check_token_expires(user.token.expires):
       return user
-    return None
+    raise HTTPException(status_code=404, detail="Пользователь не найден")
 
   # _check_admin
   def _check_admin(self, data: User) -> bool:
