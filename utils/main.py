@@ -80,6 +80,20 @@ def send_email(email: str, message: str, message_title: str) -> bool:
     raise ValueError("Пользователь с таким Email не найден")
 
 # Dates
+def check_time(time_str: str) -> bool:
+  try:
+    # Парсим время
+    hours, minutes = map(int, time_str.split(':'))
+    
+    # Проверяем, что значения находятся в допустимых диапазонах
+    if 0 <= hours <= 23 and 0 <= minutes <= 59:
+        return True
+    else:
+        return False
+  except ValueError:
+    # Возникает, если не удается преобразовать в int или разделить строку
+    return False
+
 def get_ms_date():
   return int((datetime.utcnow() - datetime(1970, 1, 1)).total_seconds() * 1000)
 
