@@ -25,10 +25,10 @@ class SchedulesService:
     return schedule
 
   def add_schedule(self, data: AddSchedule) -> Schedule:
-    user = users_service._token_auth(data.owner)
+    pet = find_pet(data.pet_id)
     if pet == None: raise HTTPException(status_code=404, detail="Питомец не найден")
 
-    pet = find_pet(data.pet_id)
+    user = users_service._token_auth(data.owner)
     if user.id != pet.owner_id: raise HTTPException(status_code=403, detail="Отказано в доступе")
 
     schedule = find_schedule_by_pet_id(pet.id)
