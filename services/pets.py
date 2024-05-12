@@ -7,11 +7,11 @@ from uuid import uuid4
 from schemas.pets import Pet, CreatePet, UpdatePet
 from schemas.users import TokenAuth
 from schemas.animals import Animal, Breed
+from services.users import users_service
 
 class PetsService:
   def get_pet(self, pet_id: str, token: TokenAuth) -> Pet:
-    user = find_user(token.token)
-    if user == None: raise HTTPException(status_code=404, detail="Пользователь не найден")
+    user = users_service._token_auth(token)
 
     pet: Pet = find_pet(pet_id)
     if pet == None: raise HTTPException(status_code=404, detail="Питомец не найден")
@@ -20,14 +20,12 @@ class PetsService:
     return pet
 
   def get_pets(self, token: TokenAuth) -> list[Pet]:
-    user = find_user(token.token)
-    if user == None: raise HTTPException(status_code=404, detail="Пользователь не найден")
+    user = users_service._token_auth(token)
 
     return get_pets(user.id)
 
   def add_pet(self, data: CreatePet) -> Pet:
-    user = find_user(data.owner.token)
-    if user == None: raise HTTPException(status_code=404, detail="Пользователь не найден")
+    user = users_service._token_auth(data.owner)
 
     new_pet: Pet = Pet(
       id=str(uuid4()),
@@ -46,8 +44,7 @@ class PetsService:
     return add_pet_db(new_pet)
 
   def update_pet(self, data: UpdatePet) -> Pet:
-    user = find_user(data.owner.token)
-    if user == None: raise HTTPException(status_code=404, detail="Пользователь не найден")
+    user = users_service._token_auth(data.owner)
 
     pet: Pet = find_pet(data.id)
     if pet == None: raise HTTPException(status_code=404, detail="Питомец не найден")
@@ -75,8 +72,7 @@ class PetsService:
     return change_pet(pet)
 
   def delete_pet(self, pet_id: str, token: TokenAuth) -> str:
-    user = find_user(token.token)
-    if user == None: raise HTTPException(status_code=404, detail="Пользователь не найден")
+    user = users_service._token_auth(token)
 
     pet: Pet = find_pet(pet_id)
     if pet == None: raise HTTPException(status_code=404, detail="Питомец не найден")

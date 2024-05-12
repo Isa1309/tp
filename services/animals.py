@@ -4,6 +4,7 @@ from db.animals import get_animals, add_animal, find_animal
 from db.breeds import get_breeds, add_breed
 from db.users import find_user
 from uuid import uuid4
+from services.users import users_service
 
 class AnimalsService:
   def get_animals(self) -> list[Animal]:
@@ -11,12 +12,9 @@ class AnimalsService:
     return animals
 
   def add_animal(self, data: CreateAnimal):
-    user = find_user(data.admin.token)
-
-    if user == None:
-      raise HTTPException(status_code=404, detail="Пользователь не найден")
+    user = users_service._token_auth(data.admin)
     
-    if user.role != "admin":
+    if not users_service._check_admin(user):
       raise HTTPException(status_code=403, detail="Отказано в доступе")
 
     new_animal: Animal = Animal(
@@ -32,12 +30,9 @@ class AnimalsService:
     return breeds
   
   def add_breed(self, data: CreateBreed):
-    user = find_user(data.admin.token)
-
-    if user == None:
-      raise HTTPException(status_code=404, detail="Пользователь не найден")
+    user = users_service._token_auth(data.admin)
     
-    if user.role != "admin":
+    if not users_service._check_admin(user):
       raise HTTPException(status_code=403, detail="Отказано в доступе")
     
     animal = find_animal(data.animal_id)
