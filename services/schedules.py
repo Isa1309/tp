@@ -14,10 +14,10 @@ class SchedulesService:
     return get_schedules(user.id)
 
   def get_schedule(self, pet_id: str, token: TokenAuth) -> Schedule:
-    user = users_service._token_auth(token)
     pet = find_pet(pet_id)
-
     if pet == None: raise HTTPException(status_code=404, detail="Питомец не найден")
+
+    user = users_service._token_auth(token)
     if user.id != pet.owner_id: raise HTTPException(status_code=403, detail="Отказано в доступе")
 
     schedule = find_schedule_by_pet_id(pet.id)
@@ -26,10 +26,13 @@ class SchedulesService:
 
   def add_schedule(self, data: AddSchedule) -> Schedule:
     user = users_service._token_auth(data.owner)
-    pet = find_pet(data.pet_id)
-
     if pet == None: raise HTTPException(status_code=404, detail="Питомец не найден")
+
+    pet = find_pet(data.pet_id)
     if user.id != pet.owner_id: raise HTTPException(status_code=403, detail="Отказано в доступе")
+
+    schedule = find_schedule_by_pet_id(pet.id)
+    if schedule != None: raise HTTPException(status_code=400, detail="Расписание для этого питомца уже создано")
 
     for i in range(len(data.time)):
       if not check_time(data.time[i]):
