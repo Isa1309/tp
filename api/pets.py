@@ -14,14 +14,6 @@ router = APIRouter()
 def get_pets(data: TokenAuth):
   return pets_service.get_pets(data)
 
-@router.put(
-  "/api/pets/{pet_id}",
-  status_code=200,
-  response_model=Pet
-)
-def get_pet(pet_id: str, data: TokenAuth):
-  return pets_service.get_pet(pet_id, data)
-
 @router.post(
   "/api/pets/add",
   status_code=200,
@@ -37,6 +29,14 @@ def add_pet(data: CreatePet):
 )
 def update_pet(data: UpdatePet):
   return pets_service.update_pet(data)
+
+@router.post(
+  "/api/pets/{pet_id}",
+  status_code=200,
+  response_model=Pet
+)
+def get_pet(pet_id: str, data: TokenAuth):
+  return pets_service.get_pet(pet_id, data)
 
 @router.delete(
   "/api/pets/delete/{pet_id}",
