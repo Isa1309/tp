@@ -5,25 +5,6 @@ from services.users import users_service
 
 router = APIRouter()
 
-# GET
-# get_user
-@router.get(
-  "/api/users/user/{data}",
-  status_code=200,
-  response_model=UserProfile
-)
-def get_user(data: str):
-  return users_service.get_user(data)
-
-# filter_users_by_substr
-@router.get(
-  "/api/users/filter_by_substring/{substring}",
-  status_code=200,
-  response_model=list[UserProfile]
-)
-def filter_users_by_substr(substring: str):
-  return users_service.filter_users_by_substr(substring)
-
 # POST
 # register_user
 @router.post(
