@@ -212,3 +212,4 @@ def delete_medical_card(card_id: str) -> str:
 
   session.commit()
   return card_id
+
